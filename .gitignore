@@ -1,0 +1,59 @@
+# Commercial and user-supplied game data. Never commit WADs from Steam or elsewhere.
+wads/
+downloads/
+steamapps/
+**/steamapps/
+*.wad
+*.WAD
+extras.wad
+extras.WAD
+*.zip
+*.sig
+
+# Generated firmware, build trees and toolchain/SDK dependencies.
+_deps/
+**/_deps/
+build/
+dist/
+env.ps1
+*.bin
+*.elf
+*.map
+*.o
+*.a
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Local captures, dumps and temporary files.
+screenshots/
+frames/
+*.raw
+*.dump
+*.dmp
+*.tmp
+*.part
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+
+# Secrets and local configuration.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.pfx
+*.p12
+*credentials*
+*secrets*
+
+# Editor and OS state.
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
