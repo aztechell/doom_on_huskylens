@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ast
 import binascii
+import hashlib
 import re
 import shutil
 import subprocess
@@ -22,12 +23,19 @@ DOWNLOADS = DEPS / "downloads"
 
 SDK_DIR = DEPS / "kendryte-standalone-sdk"
 KFLASH_REF_DIR = DEPS / "kflash.py-reference"
+KFLASH_FLASH_ONLY_SCRIPT = DEPS / "kflash.py-reference-pinned.py"
 ISP_STUB = DEPS / "isp_prog.bin"
 
 SDK_REPO = "https://github.com/kendryte/kendryte-standalone-sdk"
 KFLASH_REPO = "https://github.com/sipeed/kflash.py"
 SDK_REVISION = "02576ba67e8797444f3ee3f34c625b5ed048e707"
 KFLASH_REVISION = "550828c768b16ef329695d3f5eace3f6bcf14af2"
+KFLASH_FLASH_ONLY_URL = (
+    "https://raw.githubusercontent.com/sipeed/kflash.py/"
+    f"{KFLASH_REVISION}/kflash.py"
+)
+KFLASH_FLASH_ONLY_SHA256 = "26e13e5f753b86f59c0b6da561871f2b732e36453723ed9b8176f851b7af8367"
+ISP_STUB_SHA256 = "757776d0055048262ef92bd04a9f8cbad13647ec4f5c1f59494489a88d571129"
 TOOLCHAIN_URL = (
     "https://github.com/kendryte/kendryte-gnu-toolchain/releases/download/"
     "v8.2.0-20190409/kendryte-toolchain-win-i386-8.2.0-20190409.tar.xz"
@@ -81,6 +89,25 @@ def download_file(url: str, out: Path) -> None:
     tmp.replace(out)
 
 
+def verify_sha256(path: Path, expected: str) -> None:
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != expected:
+        raise RuntimeError(f"checksum mismatch for {path}: {digest}, expected {expected}")
+    print(f"[OK] checksum: {path}")
+
+
+def ensure_verified_download(url: str, out: Path, expected: str) -> None:
+    if out.is_file():
+        try:
+            verify_sha256(out, expected)
+            return
+        except RuntimeError:
+            print(f"[WARN] replacing invalid download: {out}")
+            out.unlink()
+    download_file(url, out)
+    verify_sha256(out, expected)
+
+
 def safe_extract_tar(archive: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     root = destination.resolve()
@@ -119,12 +146,17 @@ def ensure_toolchain() -> Path:
     return found
 
 
-def extract_isp_stub() -> None:
+def extract_isp_stub(source: Path | None = None) -> None:
     if ISP_STUB.is_file() and ISP_STUB.stat().st_size > 0:
-        print(f"[OK] ISP stub: {ISP_STUB}")
-        return
+        try:
+            verify_sha256(ISP_STUB, ISP_STUB_SHA256)
+            print(f"[OK] ISP stub: {ISP_STUB}")
+            return
+        except RuntimeError:
+            print(f"[WARN] replacing invalid ISP stub: {ISP_STUB}")
 
-    source = KFLASH_REF_DIR / "kflash.py"
+    if source is None:
+        source = KFLASH_REF_DIR / "kflash.py"
     if not source.is_file():
         raise RuntimeError(f"kflash reference missing: {source}")
 
@@ -135,7 +167,10 @@ def extract_isp_stub() -> None:
 
     compressed_hex = ast.literal_eval(match.group(1))
     data = zlib.decompress(binascii.unhexlify(compressed_hex))
-    ISP_STUB.write_bytes(data)
+    tmp = ISP_STUB.with_suffix(ISP_STUB.suffix + ".part")
+    tmp.write_bytes(data)
+    verify_sha256(tmp, ISP_STUB_SHA256)
+    tmp.replace(ISP_STUB)
     print(f"[OK] ISP stub: {ISP_STUB} ({len(data)} bytes)")
 
 
@@ -157,9 +192,29 @@ Write-Host "[DOOM on HuskyLens] KENDRYTE_TOOLCHAIN_BIN=$env:KENDRYTE_TOOLCHAIN_B
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Bootstrap local DOOM on HuskyLens dependencies")
     parser.add_argument("--skip-download", action="store_true", help="Only validate existing dependencies")
+    parser.add_argument(
+        "--flash-only",
+        action="store_true",
+        help="Prepare only the small kflash reference/ISP stub needed to install a release image",
+    )
     args = parser.parse_args(argv)
 
     DEPS.mkdir(parents=True, exist_ok=True)
+    if args.flash_only:
+        if args.skip_download:
+            if not KFLASH_FLASH_ONLY_SCRIPT.is_file():
+                raise SystemExit(f"missing pinned kflash reference: {KFLASH_FLASH_ONLY_SCRIPT}")
+            verify_sha256(KFLASH_FLASH_ONLY_SCRIPT, KFLASH_FLASH_ONLY_SHA256)
+        else:
+            ensure_verified_download(
+                KFLASH_FLASH_ONLY_URL,
+                KFLASH_FLASH_ONLY_SCRIPT,
+                KFLASH_FLASH_ONLY_SHA256,
+            )
+        extract_isp_stub(KFLASH_FLASH_ONLY_SCRIPT)
+        print("[DONE] flasher dependencies are ready")
+        return 0
+
     if not args.skip_download:
         ensure_git_checkout(SDK_DIR, SDK_REPO, SDK_REVISION)
         ensure_git_checkout(KFLASH_REF_DIR, KFLASH_REPO, KFLASH_REVISION)
@@ -176,7 +231,7 @@ def main(argv: list[str] | None = None) -> int:
     extract_isp_stub()
     write_env(toolchain)
 
-    print("[DONE] run: . doom_on_huskylens\\env.ps1")
+    print("[DONE] run: . .\\env.ps1")
     return 0
 
 

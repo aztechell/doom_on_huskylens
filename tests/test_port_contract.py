@@ -1,3 +1,4 @@
+import runpy
 import struct
 import tempfile
 import unittest
@@ -142,6 +143,51 @@ class PortContractTests(unittest.TestCase):
         self.assertIn("start_key_pulse(HUSKYLENS_JUMP_KEY", platform)
         self.assertIn("cmd->buttons2 |= BT2_JUMP", ticcmd)
         self.assertIn("player->mo->momz = JUMP_VELOCITY", player)
+
+    def test_wad_menu_sleeps_after_one_idle_minute_and_wakes_on_input(self):
+        root = Path(__file__).resolve().parents[1]
+        target = (root / "firmware/targets/doom.c").read_text(encoding="utf-8")
+        self.assertIn("WAD_MENU_IDLE_SLEEP_US (60ULL * 1000000ULL)", target)
+        self.assertIn("buttons_sync();", target)
+        self.assertIn("now - last_activity_us >= WAD_MENU_IDLE_SLEEP_US", target)
+        self.assertIn("lights_screen_backlight_off();", target)
+        self.assertIn("if(pressed)", target)
+        self.assertIn("wad_menu_wake(selected);", target)
+
+    def test_loading_overlay_is_only_drawn_for_the_initial_palette(self):
+        root = Path(__file__).resolve().parents[1]
+        platform = (root / "firmware/src/doom/doom_platform.c").read_text(encoding="utf-8")
+        start = platform.index("void doom_platform_set_palette")
+        end = platform.index("\n}\n", start)
+        palette_body = platform[start:end]
+        self.assertIn("if(!g_initial_palette_set)", palette_body)
+        self.assertIn("g_initial_palette_set = 1;", palette_body)
+        self.assertEqual(palette_body.count("doom_platform_loading_progress"), 1)
+
+    def test_flash_only_setup_is_pinned_and_checksum_verified(self):
+        root = Path(__file__).resolve().parents[1]
+        bootstrap = (root / "tools/bootstrap_deps.py").read_text(encoding="utf-8")
+        self.assertIn("KFLASH_FLASH_ONLY_SHA256", bootstrap)
+        self.assertIn("ISP_STUB_SHA256", bootstrap)
+        self.assertIn("ensure_verified_download(", bootstrap)
+        self.assertIn("verify_sha256(KFLASH_FLASH_ONLY_SCRIPT", bootstrap)
+        self.assertIn("verify_sha256(ISP_STUB, ISP_STUB_SHA256)", bootstrap)
+        flash_only = bootstrap.index("if args.flash_only:")
+        normal_bootstrap = bootstrap.index("if not args.skip_download:", flash_only + 1)
+        self.assertNotIn("ensure_git_checkout", bootstrap[flash_only:normal_bootstrap])
+
+    def test_padded_flash_write_cannot_reach_settings_slots(self):
+        root = Path(__file__).resolve().parents[1]
+        flasher = runpy.run_path(str(root / "tools/hkflash.py"))
+        builder = runpy.run_path(str(root / "tools/build_firmware.py"))
+        boundary = flasher["SETTINGS_FLASH_OFFSET"]
+        overhead = builder["K210_IMAGE_OVERHEAD"]
+
+        self.assertEqual(flasher["checked_flash_write_length"](boundary), boundary)
+        with self.assertRaises(ValueError):
+            flasher["checked_flash_write_length"](boundary + 1)
+        self.assertEqual(builder["padded_image_write_size"](boundary - overhead), boundary)
+        self.assertGreater(builder["padded_image_write_size"](boundary - overhead + 1), boundary)
 
     def test_ok_tap_then_hold_switches_forward_to_backward(self):
         sequence_window_ms = 450

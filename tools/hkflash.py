@@ -18,6 +18,7 @@ UPLOADER_VID_RE = "(1A86)|(0403)|(067B)|(10C4)"
 FLASH_CHUNK = 4096
 SRAM_CHUNK = 1024
 FLASH_ADDRESS = 0x000000
+SETTINGS_FLASH_OFFSET = 0x007FE000
 STUB_ADDRESS = 0x80000000
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT.parent
@@ -394,6 +395,17 @@ def round_up(value: int, alignment: int) -> int:
     return (value + alignment - 1) // alignment * alignment
 
 
+def checked_flash_write_length(payload_length: int) -> int:
+    write_length = round_up(payload_length, FLASH_CHUNK)
+    write_end = FLASH_ADDRESS + write_length
+    if write_end > SETTINGS_FLASH_OFFSET:
+        raise ValueError(
+            f"padded flash write ends at 0x{write_end:06X}, beyond settings boundary "
+            f"0x{SETTINGS_FLASH_OFFSET:06X}"
+        )
+    return write_length
+
+
 def cmd_monitor(args: argparse.Namespace) -> int:
     serial = require_serial()
     port = resolve_port(args, serial)
@@ -425,21 +437,26 @@ def cmd_flash(args: argparse.Namespace) -> int:
         print(f"[ERR] image not found: {image}", file=sys.stderr)
         return 1
 
-    serial = require_serial()
-    port = resolve_port(args, serial)
-    print(f"[FLASH] image: {image}")
-    print(f"[FLASH] size: {image.stat().st_size} bytes")
-    print(f"[FLASH] port: {port}")
-
     stub = Path(args.isp_stub)
     if not stub.is_file():
         print(f"[ERR] ISP stub not found: {stub}", file=sys.stderr)
-        print("      Run: python hackylens\\tools\\bootstrap_deps.py", file=sys.stderr)
+        print("      Run: py tools\\bootstrap_deps.py --flash-only", file=sys.stderr)
         return 1
 
     raw_image = image.read_bytes()
     flash_payload = make_k210_image_payload(raw_image, io_mode=args.io_mode)
-    erase_len = round_up(len(flash_payload), 4096)
+    try:
+        erase_len = checked_flash_write_length(len(flash_payload))
+    except ValueError as exc:
+        print(f"[ERR] refusing unsafe image: {exc}", file=sys.stderr)
+        return 1
+
+    serial = require_serial()
+    port = resolve_port(args, serial)
+    print(f"[FLASH] image: {image}")
+    print(f"[FLASH] size: {image.stat().st_size} bytes")
+    print(f"[FLASH] padded write: {erase_len} bytes")
+    print(f"[FLASH] port: {port}")
 
     with serial.Serial(port, args.boot_baud, timeout=0.1) as ser:
         if args.manual:
@@ -805,7 +822,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_screenshot = sub.add_parser("screenshot", help="Request a firmware LCD screenshot over UART")
     add_common_port_args(p_screenshot)
-    p_screenshot.add_argument("-o", "--output", help="Output BMP path. Default: hackylens/screenshots/screen_YYYYmmdd_HHMMSS.bmp")
+    p_screenshot.add_argument("-o", "--output", help="Output BMP path. Default: screenshots/screen_YYYYmmdd_HHMMSS.bmp")
     p_screenshot.add_argument("--baud", type=int, default=DEFAULT_BOOT_BAUD, help="Firmware debug UART baudrate")
     p_screenshot.add_argument("--timeout", type=float, default=45.0, help="Screenshot transfer timeout")
     p_screenshot.add_argument("--reset-before-read", action="store_true", help="Pulse uploader-style normal boot reset before requesting screenshot")

@@ -28,6 +28,7 @@
 #define MENU_ROW_STEP 24U
 #define COLOR_DOOM_ORANGE 0xFD20U
 #define COLOR_DOOM_RED 0xB800U
+#define WAD_MENU_IDLE_SLEEP_US (60ULL * 1000000ULL)
 
 static void show_loading_screen(void)
 {
@@ -73,22 +74,60 @@ static void draw_wad_menu(size_t selected)
         draw_wad_menu_row(i, i == selected);
 }
 
+static void wad_menu_enter_sleep(void)
+{
+    lights_screen_backlight_off();
+    lcd_fill_rect(0, 0, LCD_W, LCD_H, COLOR_BLACK);
+    printf("[WAD] sleep after 60s idle\r\n");
+}
+
+static void wad_menu_wake(size_t selected)
+{
+    draw_wad_menu(selected);
+    lights_screen_backlight_set(100);
+    printf("[WAD] wake\r\n");
+}
+
 static size_t select_wad_menu(void)
 {
     size_t selected = 0;
     size_t count = doom_storage_wad_count();
+    uint64_t last_activity_us;
+    uint8_t sleeping = 0;
 
+    buttons_sync();
     while(hk_input_state() != 0)
     {
         buttons_poll();
         hal_sleep_ms(10);
     }
     draw_wad_menu(selected);
+    last_activity_us = hal_time_us();
     while(1)
     {
+        uint64_t now;
+        uint32_t state;
         uint32_t pressed;
+
         buttons_poll();
+        now = hal_time_us();
+        state = hk_input_state();
         pressed = hk_input_pressed();
+
+        if(state)
+            last_activity_us = now;
+        if(sleeping)
+        {
+            if(pressed)
+            {
+                sleeping = 0;
+                last_activity_us = now;
+                wad_menu_wake(selected);
+            }
+            hal_sleep_ms(10);
+            continue;
+        }
+
         if(pressed & BUTTON_LEFT)
         {
             size_t previous = selected;
@@ -105,6 +144,12 @@ static size_t select_wad_menu(void)
         }
         else if(pressed & BUTTON_OK)
             return selected;
+
+        if(!state && now - last_activity_us >= WAD_MENU_IDLE_SLEEP_US)
+        {
+            sleeping = 1;
+            wad_menu_enter_sleep();
+        }
         hal_sleep_ms(10);
     }
 }

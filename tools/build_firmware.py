@@ -16,11 +16,19 @@ WORKSPACE = ROOT.parent
 LOCAL_DEPS = ROOT / "_deps"
 LEGACY_DEPS = WORKSPACE / "hackylens-legacy" / "_deps"
 SETTINGS_FLASH_OFFSET = 0x007FE000
+FLASH_WRITE_BLOCK = 4096
+# One I/O-mode byte, a 4-byte image length, and a 32-byte SHA-256 digest.
+K210_IMAGE_OVERHEAD = 1 + 4 + 32
 
 PROJECT = "doom_huskylens"
 OUTPUT = "doom_huskylens.bin"
 BUILD_DIR = "sdk-doom"
 TARGET_SOURCE = ROOT / "firmware" / "targets" / "doom.c"
+
+
+def padded_image_write_size(raw_size: int) -> int:
+    payload_size = raw_size + K210_IMAGE_OVERHEAD
+    return (payload_size + FLASH_WRITE_BLOCK - 1) // FLASH_WRITE_BLOCK * FLASH_WRITE_BLOCK
 
 DOOM_FIRMWARE_SOURCES = [
     Path("firmware/src/board/board_hackylens.c"),
@@ -216,10 +224,13 @@ def build_target(sdk: Path, toolchain_bin: Path) -> Path:
     built = build_dir / f"{PROJECT}.bin"
     if not built.is_file() or built.stat().st_size == 0:
         raise RuntimeError(f"build did not produce a non-empty image: {built}")
-    if built.stat().st_size >= SETTINGS_FLASH_OFFSET:
+    raw_size = built.stat().st_size
+    padded_write_size = padded_image_write_size(raw_size)
+    if padded_write_size > SETTINGS_FLASH_OFFSET:
         raise RuntimeError(
-            f"firmware image reaches settings flash slot 0x{SETTINGS_FLASH_OFFSET:06X}: "
-            f"{built.stat().st_size} bytes"
+            f"padded firmware write reaches settings flash slot "
+            f"0x{SETTINGS_FLASH_OFFSET:06X}: {padded_write_size} bytes "
+            f"from {raw_size} raw bytes"
         )
 
     out_image.parent.mkdir(parents=True, exist_ok=True)
@@ -239,11 +250,11 @@ def main(argv: list[str] | None = None) -> int:
     parse_args(argv)
     sdk = find_sdk()
     if not sdk:
-        print("[ERR] Kendryte SDK not found. Run: python hackylens\\tools\\bootstrap_deps.py", file=sys.stderr)
+        print("[ERR] Kendryte SDK not found. Run: py tools\\bootstrap_deps.py", file=sys.stderr)
         return 1
     toolchain = find_toolchain_bin()
     if not toolchain:
-        print("[ERR] Kendryte toolchain not found. Run bootstrap_deps.py and . hackylens\\env.ps1", file=sys.stderr)
+        print("[ERR] Kendryte toolchain not found. Run bootstrap_deps.py and . .\\env.ps1", file=sys.stderr)
         return 1
 
     build_target(sdk, toolchain)

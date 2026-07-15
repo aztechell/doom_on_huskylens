@@ -1,6 +1,6 @@
 # GPL compatibility audit: DOOM on HuskyLens
 
-Audit date: 2026-07-14
+Audit date: 2026-07-15
 
 This is an engineering license audit, not legal advice. It records what can be
 proved from the repository, the actual completed build, and the pinned upstream
@@ -46,8 +46,8 @@ rebuilding recreates the original paths below:
 - SDK used by the completed build:
   `kendryte/kendryte-standalone-sdk@02576ba67e8797444f3ee3f34c625b5ed048e707`.
 
-The final cleaned build is 1,470,520 bytes with SHA-256
-`c01be177e9ae564d37c6065b25b1d0a71c1b3d75da20198c7875b9ddef00a5a9`.
+The current verified build is 1,470,776 bytes with SHA-256
+`938bdaee16fc520e8f4eab48ceedafb969517ca44c63597a8b14fdecb62f8c2f`.
 
 The exact Doom dependency closure contains 168 local files:
 

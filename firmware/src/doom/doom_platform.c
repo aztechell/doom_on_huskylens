@@ -58,6 +58,7 @@ static uint32_t g_ok_tap_deadline_ms;
 static uint32_t g_ok_second_started_ms;
 static uint32_t g_frames;
 static uint32_t g_fps_started_ms;
+static uint8_t g_initial_palette_set;
 
 static void queue_event(uint8_t pressed, uint8_t key)
 {
@@ -416,7 +417,11 @@ void doom_platform_set_palette(const uint8_t *palette)
         g_palette[i] = (uint16_t)(((uint16_t)(r & 0xF8U) << 8) |
                                   ((uint16_t)(g & 0xFCU) << 3) | (b >> 3));
     }
-    doom_platform_loading_progress(90, "STARTING DOOM");
+    if(!g_initial_palette_set)
+    {
+        g_initial_palette_set = 1;
+        doom_platform_loading_progress(90, "STARTING DOOM");
+    }
 }
 
 void doom_platform_loading_progress(uint8_t percent, const char *label)

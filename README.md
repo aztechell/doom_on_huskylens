@@ -1,90 +1,136 @@
-# DOOM on HuskyLens
+<div align="center">
 
-Standalone, soundless DOOM firmware for the Kendryte K210-based HuskyLens.
-Only the platform files needed by this target are kept in this repository.
+<h1>DOOM on HuskyLens</h1>
 
-> [!IMPORTANT]
-> The original commercial `DOOM.WAD` is **not distributed** by this project.
-> You must supply your own legally obtained game data, or use Freedoom under its
-> own license.
+<img src="firmware/assets/doom_on_huskylens_loading_320x240.png"
+     alt="DOOM on HuskyLens" width="640">
 
-## SD card and game data
+<p><strong>Turn a HuskyLens into a tiny standalone DOOM console.</strong><br>
+No soldering. No hardware mods. Add a microSD card, flash the firmware, and play.</p>
 
-Format an SD card as FAT32, create `/DOOM/`, and copy one or more IWADs using
-exactly these supported names:
+</div>
 
-- `DOOM.WAD`
-- `FREEDOOM1.WAD`
-- `FREEDOOM2.WAD`
+DOOM on HuskyLens is made for fun first: a clean game picker, instant boot,
+simple four-button controls, and the full classic game running directly on the
+device. It is completely standalone after installation and does not need a PC
+to play.
 
-The firmware uses that priority order. WAD data remains on the SD card and is
-never embedded into or written by the firmware.
+> [!NOTE]
+> This port is intentionally soundless. Flashing replaces the firmware
+> currently installed on your HuskyLens.
 
-Freedoom is a separate project. If you redistribute Freedoom, include the
-license and attribution from the Freedoom distribution. This repository
-intentionally contains no WAD files.
+## What you need
 
-## Build the firmware
+- a HuskyLens;
+- a FAT32-formatted microSD card;
+- a USB cable and a Windows PC with Python 3.10 or newer;
+- a legally obtained `DOOM.WAD`, or a free Freedoom IWAD;
+- the latest `doom_huskylens.bin` release.
 
-The build helper downloads pinned Kendryte standalone SDK and `kflash.py`
-revisions plus the versioned Kendryte GNU toolchain release into ignored
-`_deps/` directories.
+The original commercial DOOM data is not included.
 
-```powershell
-python tools/bootstrap_deps.py
-. .\env.ps1
-python tools/check_env.py
-python tools/build_firmware.py doom
+## Install in three steps
+
+### 1. Prepare the microSD card
+
+Create a folder named `DOOM` in the root of the card and copy at least one of
+these files into it:
+
+```text
+/DOOM/DOOM.WAD
+/DOOM/FREEDOOM1.WAD
+/DOOM/FREEDOOM2.WAD
 ```
 
-The default output is `build/doom_huskylens.bin`; a release sidecar is written
-to `dist/doom_huskylens.bin.json`. Build directories, SDK/toolchain downloads,
-local paths and generated binaries are ignored.
+Names are case-insensitive. You can install all three and choose one whenever
+the device starts.
 
-## Command-line flashing
+### 2. Prepare the installer
 
-The existing Python flasher remains the reference implementation:
+Download and unpack this repository, then open PowerShell in its folder. Run
+these commands once:
 
 ```powershell
-python tools/hkflash.py flash build/doom_huskylens.bin --port COM10
-python tools/hkflash.py monitor --port COM10 --reset-before-read --duration 10
+py -m pip install pyserial
+py tools/bootstrap_deps.py --flash-only
 ```
 
-`hkflash.py` does not perform a full-chip erase in its normal path. It writes
-the K210 image at `0x000000` and keeps the padded write below the settings area
-starting at `0x7FE000`.
+The flash-only setup downloads one small, pinned installer file and verifies
+its checksum. It does not require Git and does not download the compiler or
+firmware SDK.
+
+### 3. Flash and play
+
+Connect the HuskyLens, place `doom_huskylens.bin` in the project folder, and
+run:
+
+```powershell
+py tools/hkflash.py flash .\doom_huskylens.bin
+```
+
+The correct USB serial port is normally detected automatically. If several
+serial devices are connected, specify it explicitly:
+
+```powershell
+py tools/hkflash.py flash .\doom_huskylens.bin --port COM10
+```
+
+Insert the prepared microSD card and restart the HuskyLens. Choose a game with
+`LEFT` or `RIGHT`, then press `OK`.
+
+> [!TIP]
+> The game-selection screen turns itself off after one minute without input.
+> Press any button to wake it; your current selection is preserved.
 
 ## Controls
 
-- `LEFT`, `RIGHT`: turn; menu up/down
-- `OK`: move forward; menu confirm
-- `BACK`: fire
-- click `BACK` once while continuously holding `OK`: use/open doors after the
-  320 ms double-click window
-- double-click `BACK` while continuously holding `OK`: jump
-- hold `BACK + OK` for 350 ms: menu/pause
-- hold `BACK + RIGHT` for 350 ms: next owned weapon
+### Game
 
-## Tests
+| Action | Controls |
+| --- | --- |
+| Turn | `LEFT` / `RIGHT` |
+| Move forward | Hold `OK` |
+| Move backward | Quickly tap `OK`, then press it again and hold |
+| Fire | `BACK` |
+| Open a door / use a switch | Hold `OK`, tap `BACK` once |
+| Jump | Hold `OK`, double-tap `BACK` |
+| Next owned weapon | Hold `BACK + RIGHT` |
+| Open or close the DOOM menu | Hold `BACK + OK` |
 
-```powershell
-python -m unittest discover tests
-```
+### Menus
 
-Component licenses and pinned upstream origins are listed in
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
-The published HackyLens platform-source mapping is recorded in
-[`docs/HACKYLENS_PROVENANCE.md`](docs/HACKYLENS_PROVENANCE.md).
+| Action | Controls |
+| --- | --- |
+| Previous / up | `LEFT` |
+| Next / down | `RIGHT` |
+| Select | `OK` |
+| Open / close or go back | Hold `BACK + OK` |
 
-## License and trademarks
+## Quick troubleshooting
 
-The combined firmware is distributed under GNU GPL version 3. Separately
-licensed components retain their original licenses and notices; see
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and
-[`docs/GPL_AUDIT.md`](docs/GPL_AUDIT.md). A binary release must be accompanied
-by the complete corresponding source and exact dependency revisions described
-there.
+- **No game is found:** check that the card is FAT32 and the file is inside
+  `/DOOM/` with one of the supported names above.
+- **The game picker is black:** it has gone to sleep; press any button.
+- **No serial port is detected:** reconnect the USB cable and run
+  `py tools/hkflash.py list`.
+- **Flashing cannot enter boot mode:** close other serial tools and retry with
+  the HuskyLens connected directly to the PC.
 
-DOOM is a trademark of id Software/ZeniMax. HuskyLens is a product of DFRobot.
-This independent project is not affiliated with or endorsed by id Software,
-ZeniMax or DFRobot.
+## For developers
+
+The main page deliberately keeps engineering details out of the way:
+
+- [building and testing](docs/DEVELOPMENT.md);
+- [advanced flashing and UART monitoring](docs/FLASHING.md);
+- [license and source provenance audit](docs/GPL_AUDIT.md);
+- [verified release results](docs/VERIFICATION.md).
+
+## License and names
+
+The combined firmware is released under GNU GPL version 3. Third-party
+components retain their notices; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+WAD files are separate game data and are not distributed here.
+
+DOOM is a trademark of id Software/ZeniMax. HuskyLens is a DFRobot product.
+This independent compatibility project is not affiliated with or endorsed by
+id Software, ZeniMax, or DFRobot.
