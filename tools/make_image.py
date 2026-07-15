@@ -38,21 +38,25 @@ def main(argv: list[str] | None = None) -> int:
     version_file = Path(__file__).resolve().parents[1] / "VERSION"
     version = version_file.read_text(encoding="utf-8").strip() if version_file.is_file() else "unknown"
 
+    digest = sha256_file(out_image)
     meta = {
         "project": "DOOM on HuskyLens",
         "version": version,
         "image": out_image.name,
         "size": out_image.stat().st_size,
-        "sha256": sha256_file(out_image),
+        "sha256": digest,
         "flash_address": "0x000000",
         "settings_address": "0x7FE000",
     }
 
     meta_path = out_image.with_suffix(out_image.suffix + ".json")
     meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    checksum_path = out_image.with_suffix(out_image.suffix + ".sha256")
+    checksum_path.write_text(f"{digest}  {out_image.name}\n", encoding="ascii")
 
     print(out_image)
     print(meta_path)
+    print(checksum_path)
     return 0
 
 

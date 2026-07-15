@@ -1,3 +1,6 @@
+import contextlib
+import hashlib
+import io
 import runpy
 import struct
 import tempfile
@@ -66,6 +69,26 @@ def segmented_read(data: bytes, offset: int, length: int,
 
 
 class PortContractTests(unittest.TestCase):
+    def test_release_image_generator_writes_metadata_and_checksum(self):
+        root = Path(__file__).resolve().parents[1]
+        generator = runpy.run_path(str(root / "tools/make_image.py"))
+        payload = b"test-firmware-image"
+        digest = hashlib.sha256(payload).hexdigest()
+
+        with tempfile.TemporaryDirectory() as directory_name:
+            directory = Path(directory_name)
+            image = directory / "input.bin"
+            output = directory / "dist"
+            image.write_bytes(payload)
+            with contextlib.redirect_stdout(io.StringIO()):
+                result = generator["main"]([str(image), "--out-dir", str(output)])
+            self.assertEqual(result, 0)
+            self.assertEqual(
+                (output / "input.bin.sha256").read_text(encoding="ascii"),
+                f"{digest}  input.bin\n",
+            )
+            self.assertIn(f'"sha256": "{digest}"', (output / "input.bin.json").read_text(encoding="utf-8"))
+
     def test_synthetic_wads_have_valid_directories(self):
         with tempfile.TemporaryDirectory() as directory_name:
             directory_path = Path(directory_name)

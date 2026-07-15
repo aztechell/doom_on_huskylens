@@ -28,6 +28,11 @@ The narrowest defensible conclusion is therefore: **publish the source under
 GPLv3; publish a firmware binary only with its exact corresponding source and
 retained third-party notices.**
 
+The browser installer under `web/` is a separate MIT-licensed aggregate based
+on HLWF. It is not compiled or linked into the GPLv3 firmware. Its license,
+adaptation notice, and the provenance of its kflash.py SRAM helper are kept
+inside `web/` and summarized in `THIRD_PARTY_NOTICES.md`.
+
 ## Audited build and method
 
 The audit follows the actual `doom_huskylens` build rather than scanning every

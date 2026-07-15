@@ -3,12 +3,19 @@
 Verification date: 2026-07-15
 
 - Incremental firmware build after the WAD-menu/UI changes: passed.
-- Unit/contract tests: 20 passed.
+- Firmware unit/contract tests: 21 passed.
+- Web flasher tests: 22 passed, including release-asset verification, the
+  `0x7FE000` settings boundary, 4096-byte final-block padding, and non-repeating
+  `BUSY` response handling.
+- Pages package: same-origin CSP enforced; generated deployment excludes tests,
+  build tools, package metadata, and unverified release binaries.
 - Strict engine license audit: 168 files, no missing notices, staged hashes
   match the current source tree.
 - Firmware size: 1,470,776 bytes.
 - Firmware SHA-256:
   `938bdaee16fc520e8f4eab48ceedafb969517ca44c63597a8b14fdecb62f8c2f`.
+- Pinned Kendryte SDK source archive: 3,033,192 bytes, SHA-256
+  `19f9fd629a1649a35372541f8517cacb4be8dbee94eacd212856196c2af29562`.
 - Flash target: HuskyLens on COM10, normal write path without full-chip erase.
 - Final flash result: completed and rebooted successfully.
 - Public installer path: the 16,512-byte ISP stub extracted by `--flash-only`

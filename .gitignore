@@ -27,6 +27,10 @@ env.ps1
 *.so
 *.dylib
 
+# Deliberately published web-flasher helper and generated Pages output.
+!web/third_party/kflash.py/isp_prog.bin
+_site/
+
 # Local captures, dumps and temporary files.
 screenshots/
 frames/

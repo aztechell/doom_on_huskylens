@@ -3,10 +3,16 @@
 <h1>DOOM on HuskyLens</h1>
 
 <img src="firmware/assets/doom_on_huskylens_loading_320x240.png"
-     alt="DOOM on HuskyLens" width="640">
+     alt="DOOM on HuskyLens" width="320" height="240">
 
 <p><strong>Turn a HuskyLens into a tiny standalone DOOM console.</strong><br>
 No soldering. No hardware mods. Add a microSD card, flash the firmware, and play.</p>
+
+<p>
+  <a href="https://aztechell.github.io/doom_on_huskylens/"><strong>Open the web flasher</strong></a>
+  ·
+  <a href="https://github.com/aztechell/doom_on_huskylens/releases/latest">Download the latest release</a>
+</p>
 
 </div>
 
@@ -21,11 +27,10 @@ to play.
 
 ## What you need
 
-- a HuskyLens;
+- a [DFRobot Gravity: HuskyLens K210 AI Camera (SKU `SEN0305`)](https://www.dfrobot.com/product-1922.html) — the original K210 model, not HuskyLens 2;
 - a FAT32-formatted microSD card;
-- a USB cable and a Windows PC with Python 3.10 or newer;
-- a legally obtained `DOOM.WAD`, or a free Freedoom IWAD;
-- the latest `doom_huskylens.bin` release.
+- a USB cable and a desktop version of Chrome or Edge;
+- a legally obtained `DOOM.WAD`, or the free Freedoom IWADs.
 
 The original commercial DOOM data is not included.
 
@@ -45,35 +50,32 @@ these files into it:
 Names are case-insensitive. You can install all three and choose one whenever
 the device starts.
 
-### 2. Prepare the installer
+Don't own DOOM? [Download Freedoom 0.13.0 (Phase 1 + Phase 2)](https://github.com/freedoom/freedoom/releases/download/v0.13.0/freedoom-0.13.0.zip),
+extract `freedoom1.wad` and/or `freedoom2.wad`, and copy them into `/DOOM/`.
+See the [official Freedoom download page](https://freedoom.github.io/download.html)
+for details and other packages.
 
-Download and unpack this repository, then open PowerShell in its folder. Run
-these commands once:
+### 2. Flash from the browser
 
-```powershell
-py -m pip install pyserial
-py tools/bootstrap_deps.py --flash-only
-```
+Open the [DOOM on HuskyLens web flasher](https://aztechell.github.io/doom_on_huskylens/)
+in desktop Chrome or Edge. It loads the available firmware versions directly
+from this project's GitHub Releases — you do not need to download or select a
+`.bin` file yourself.
 
-The flash-only setup downloads one small, pinned installer file and verifies
-its checksum. It does not require Git and does not download the compiler or
-firmware SDK.
+1. Connect the HuskyLens over USB.
+2. Choose a firmware release and wait for its SHA-256 check to complete.
+3. Select the serial port and confirm that the current firmware may be replaced.
+4. Start flashing and keep USB power connected until the device restarts.
 
-### 3. Flash and play
+The flasher runs locally in your browser. The selected release is verified
+before Web Serial is allowed to write it. Desktop Chrome and Edge are the
+supported browsers for this installer; other browsers are not part of the
+tested release path.
 
-Connect the HuskyLens, place `doom_huskylens.bin` in the project folder, and
-run:
+Prefer PowerShell or need diagnostics? Use the
+[command-line flashing guide](docs/FLASHING.md).
 
-```powershell
-py tools/hkflash.py flash .\doom_huskylens.bin
-```
-
-The correct USB serial port is normally detected automatically. If several
-serial devices are connected, specify it explicitly:
-
-```powershell
-py tools/hkflash.py flash .\doom_huskylens.bin --port COM10
-```
+### 3. Insert the card and play
 
 Insert the prepared microSD card and restart the HuskyLens. Choose a game with
 `LEFT` or `RIGHT`, then press `OK`.
@@ -111,8 +113,11 @@ Insert the prepared microSD card and restart the HuskyLens. Choose a game with
 - **No game is found:** check that the card is FAT32 and the file is inside
   `/DOOM/` with one of the supported names above.
 - **The game picker is black:** it has gone to sleep; press any button.
-- **No serial port is detected:** reconnect the USB cable and run
-  `py tools/hkflash.py list`.
+- **The web flasher cannot select a port:** use desktop Chrome or Edge, then
+  reconnect the USB cable and close other serial applications.
+- **No firmware release appears:** open the project's
+  [Releases page](https://github.com/aztechell/doom_on_huskylens/releases)
+  and retry after the Pages catalog updates.
 - **Flashing cannot enter boot mode:** close other serial tools and retry with
   the HuskyLens connected directly to the PC.
 

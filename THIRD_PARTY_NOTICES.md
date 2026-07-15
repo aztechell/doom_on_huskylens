@@ -62,9 +62,28 @@ legal advice.
 - License: MIT
 
 The command-line flashing workflow uses kflash.py as its protocol reference.
-Downloaded ISP stubs remain local dependencies and are not committed. The
-separate local `isp_prog_huskylens.bin` is not published because its provenance
-and redistribution terms have not been established.
+Its downloaded ISP stub remains an ignored local dependency. The web flasher
+bundles the upstream MIT-licensed 16,512-byte ISP stub at
+`web/third_party/kflash.py/isp_prog.bin`; its SHA-256 is
+`757776d0055048262ef92bd04a9f8cbad13647ec4f5c1f59494489a88d571129`,
+and the original license and provenance notice are stored beside it.
+
+The separate local `isp_prog_huskylens.bin` is not published because its
+provenance and redistribution terms have not been established.
+
+## HLWF web flasher
+
+- Upstream: `https://github.com/aztechell/HLWF`
+- Based on commit: `513c13d`
+- Copyright: 2026 HLWF contributors
+- License: MIT
+- Preserved license: `web/LICENSE`
+- Adaptation notice: `web/NOTICE.md`
+
+The release-selection UI and Web Serial K210 implementation under `web/` are
+derived from HLWF and adapted specifically for DOOM on HuskyLens. The web
+application is an aggregated MIT component; it is not linked into the GPLv3
+firmware image.
 
 ## Freedoom
 

@@ -1,0 +1,16 @@
+{
+  "name": "doom-on-huskylens-web-flasher",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Release-driven Web Serial installer for DOOM on HuskyLens SEN0305.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test",
+    "build:site": "node tools/build-release-site.mjs",
+    "serve": "python -m http.server 8000"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

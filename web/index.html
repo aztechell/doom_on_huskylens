@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Install DOOM on HuskyLens SEN0305 directly from a verified GitHub release.">
+  <meta name="theme-color" content="#120b08">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="DOOM on HuskyLens — Web Flasher">
+  <meta property="og:description" content="Pick a release, connect HuskyLens, and flash. No SDK or terminal required.">
+  <meta property="og:url" content="https://aztechell.github.io/doom_on_huskylens/">
+  <meta property="og:image" content="https://aztechell.github.io/doom_on_huskylens/assets/social-preview.png">
+  <meta property="og:image:alt" content="DOOM on HuskyLens web flasher">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DOOM on HuskyLens — Web Flasher">
+  <meta name="twitter:description" content="Install a verified release on HuskyLens from the browser.">
+  <meta name="twitter:image" content="https://aztechell.github.io/doom_on_huskylens/assets/social-preview.png">
+  <title>DOOM on HuskyLens — Web Flasher</title>
+  <link rel="icon" type="image/png" href="./assets/doom_on_huskylens_loading_320x240.png">
+  <link rel="apple-touch-icon" href="./assets/doom_on_huskylens_loading_320x240.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#installer" data-i18n-aria-label="brand.label">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span class="brand-copy"><strong>DOOM</strong><small>on HuskyLens</small></span>
+    </a>
+    <div class="topbar-actions">
+      <span class="browser-badge" id="browser-badge" data-i18n="browser.checking">Checking browser…</span>
+      <div class="language-switch" role="group" aria-label="Language">
+        <button id="lang-en" type="button" data-language="en" aria-pressed="true">EN</button>
+        <span aria-hidden="true">/</span>
+        <button id="lang-ru" type="button" data-language="ru" aria-pressed="false">RU</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow" data-i18n="hero.kicker">Tiny console. Full adventure.</p>
+        <h1 id="hero-title" data-i18n="hero.title">Put DOOM on your HuskyLens</h1>
+        <p class="hero-lede" data-i18n="hero.copy">Pick a release, connect one cable, and flash. No SDK, terminal, or firmware file hunting.</p>
+        <ul class="hero-facts" aria-label="Compatibility">
+          <li data-i18n="hero.device">Made for HuskyLens SEN0305</li>
+          <li data-i18n="hero.browser">Desktop Chrome / Edge</li>
+          <li data-i18n="hero.wad">WAD stays on your SD card</li>
+        </ul>
+      </div>
+      <figure class="hero-art">
+        <img src="./assets/doom_on_huskylens_loading_320x240.png" width="320" height="240" alt="DOOM on HuskyLens loading screen">
+        <figcaption>320 × 240 · K210 · standalone</figcaption>
+      </figure>
+    </section>
+
+    <section class="installer" id="installer" aria-labelledby="installer-title">
+      <div class="section-heading">
+        <p class="eyebrow" data-i18n="steps.kicker">Three simple steps</p>
+        <h2 id="installer-title">Browser installer</h2>
+      </div>
+
+      <div class="install-grid">
+        <div class="setup-column">
+          <section class="step-card" aria-labelledby="device-title">
+            <div class="step-heading">
+              <span class="step-number">01</span>
+              <div>
+                <h3 id="device-title" data-i18n="device.title">Connect HuskyLens</h3>
+                <p data-i18n="device.help">Plug it into this computer over USB, then choose its serial port.</p>
+              </div>
+            </div>
+            <div class="device-row">
+              <div class="device-copy">
+                <strong id="device-name" data-i18n="device.none">No device selected</strong>
+                <span id="device-meta" data-i18n="device.waiting">Waiting for permission</span>
+              </div>
+              <button class="button button-secondary" id="connect-button" type="button" data-i18n="device.select">Select device</button>
+            </div>
+          </section>
+
+          <section class="step-card" aria-labelledby="release-title">
+            <div class="step-heading">
+              <span class="step-number">02</span>
+              <div>
+                <h3 id="release-title" data-i18n="release.title">Choose a version</h3>
+                <p data-i18n="release.help">Firmware comes from verified releases of this project.</p>
+              </div>
+            </div>
+            <label class="select-label" for="release-select" data-i18n="release.version">Version</label>
+            <div class="select-wrap">
+              <select id="release-select" disabled>
+                <option value="" data-i18n="release.loadingCatalog">Loading available releases…</option>
+              </select>
+            </div>
+            <p class="validation is-loading" id="release-state" role="status" aria-live="polite" data-i18n="release.loadingCatalog">Loading available releases…</p>
+            <dl class="release-facts">
+              <div><dt data-i18n="release.version">Version</dt><dd id="release-tag">—</dd></div>
+              <div><dt data-i18n="release.published">Published</dt><dd id="release-published">—</dd></div>
+              <div><dt data-i18n="release.size">Download</dt><dd id="release-size">—</dd></div>
+              <div class="hash-row"><dt data-i18n="release.sha">SHA-256</dt><dd id="release-hash">—</dd></div>
+            </dl>
+            <a class="release-link" id="release-link" href="https://github.com/aztechell/doom_on_huskylens/releases" target="_blank" rel="noreferrer" hidden>
+              <span data-i18n="release.notes">Release notes</span><span aria-hidden="true">↗</span>
+            </a>
+          </section>
+        </div>
+
+        <section class="operation-card" aria-labelledby="action-title">
+          <div class="step-heading">
+            <span class="step-number">03</span>
+            <div>
+              <h3 id="action-title" data-i18n="action.title">Flash and play</h3>
+              <p data-i18n="action.help">Review the warning, start flashing, and keep the cable connected until completion.</p>
+            </div>
+          </div>
+
+          <div class="progress-heading">
+            <strong id="progress-stage" role="status" aria-live="polite" data-i18n="stage.ready">Ready</strong>
+            <span id="progress-value">0%</span>
+          </div>
+          <progress id="progress-bar" max="100" value="0">0%</progress>
+
+          <ol class="stages">
+            <li class="is-active" data-stage="ready">
+              <span class="stage-marker"></span>
+              <span><strong data-i18n="stages.device">Device</strong><small data-i18n="stages.deviceHelp">Enter K210 BootROM</small></span>
+            </li>
+            <li data-stage="stub">
+              <span class="stage-marker"></span>
+              <span><strong data-i18n="stages.programmer">Programmer</strong><small data-i18n="stages.programmerHelp">Prepare flash memory</small></span>
+            </li>
+            <li data-stage="write">
+              <span class="stage-marker"></span>
+              <span><strong data-i18n="stages.firmware">Firmware</strong><small data-i18n="stages.firmwareHelp">Write verified image</small></span>
+            </li>
+            <li data-stage="done">
+              <span class="stage-marker"></span>
+              <span><strong data-i18n="stages.done">Done</strong><small data-i18n="stages.doneHelp">Restart HuskyLens</small></span>
+            </li>
+          </ol>
+
+          <div class="action-zone">
+            <label class="consent-row">
+              <input id="consent" type="checkbox" disabled>
+              <span class="custom-check" aria-hidden="true"></span>
+              <span data-i18n="action.consent">I understand this replaces the current HuskyLens firmware.</span>
+            </label>
+            <div class="action-buttons">
+              <button class="button button-primary" id="flash-button" type="button" disabled>
+                <span data-i18n="action.flash">Flash DOOM</span><span aria-hidden="true">→</span>
+              </button>
+              <button class="button button-danger" id="cancel-button" type="button" hidden data-i18n="action.cancel">Cancel</button>
+            </div>
+            <p class="power-warning"><span aria-hidden="true">!</span><span data-i18n="action.warning">Do not disconnect USB or power while flashing.</span></p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="next-card" aria-labelledby="next-title">
+      <div class="next-icon" aria-hidden="true">SD</div>
+      <div>
+        <h2 id="next-title" data-i18n="next.title">After flashing</h2>
+        <p data-i18n="next.copy">Put a supported WAD in /DOOM/ on a FAT32 SD card, insert it, and restart HuskyLens.</p>
+      </div>
+      <a href="https://github.com/aztechell/doom_on_huskylens#install-in-three-steps" target="_blank" rel="noreferrer">
+        <span data-i18n="next.link">Installation and controls</span><span aria-hidden="true">↗</span>
+      </a>
+    </section>
+
+    <details class="log-panel" id="log-panel">
+      <summary>
+        <span><span class="status-dot" aria-hidden="true"></span><span data-i18n="log.title">Technical log</span></span>
+        <span class="log-preview" id="log-preview">Initializing…</span>
+        <span class="log-toggle"><span class="when-closed" data-i18n="log.expand">Show</span><span class="when-open" data-i18n="log.collapse">Hide</span></span>
+      </summary>
+      <div class="log-content">
+        <button id="clear-log" type="button" data-i18n="log.clear">Clear</button>
+        <ol class="operation-log" id="operation-log" aria-live="polite"></ol>
+      </div>
+    </details>
+  </main>
+
+  <footer class="footer">
+    <span>DOOM on HuskyLens · Web Flasher</span>
+    <span data-i18n="footer.independent">Independent community project · not affiliated with DFRobot or id Software</span>
+    <nav aria-label="Project links">
+      <a href="https://github.com/aztechell/doom_on_huskylens">GitHub</a>
+      <a href="./LICENSE">Web license</a>
+      <a href="./NOTICE.md">Notices</a>
+    </nav>
+  </footer>
+</body>
+</html>

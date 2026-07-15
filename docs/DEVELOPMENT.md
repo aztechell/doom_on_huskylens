@@ -20,7 +20,8 @@ Generated outputs:
 
 - `build/doom_huskylens.bin` — raw K210 firmware image;
 - `dist/doom_huskylens.bin` — release copy;
-- `dist/doom_huskylens.bin.json` — version, size, hash, and flash addresses.
+- `dist/doom_huskylens.bin.json` — version, size, hash, and flash addresses;
+- `dist/doom_huskylens.bin.sha256` — checksum file for release verification.
 
 Build trees, downloaded dependencies, local paths, generated binaries, and
 game data are excluded by `.gitignore`.
@@ -31,6 +32,7 @@ game data are excluded by `.gitignore`.
 - `firmware/src/doom/` — platform bridge, storage, and engine bootstrap;
 - `firmware/src/{board,drivers,hal,storage}/` — minimal HuskyLens hardware layer;
 - `engine/doomgeneric/doomgeneric/` — exact engine source/header build closure;
+- `web/` — separate MIT-licensed, release-driven Web Serial installer;
 - `tools/build_firmware.py` — deterministic staging and SDK build helper;
 - `tools/audit_doomgeneric_licenses.py` — strict file-level license audit.
 
@@ -43,10 +45,15 @@ not part of this target.
 ```powershell
 py -B -m unittest discover -s tests -v
 py -B tools/audit_doomgeneric_licenses.py --csv docs/GPL_AUDIT_FILES.csv --strict
+npm.cmd --prefix web test
 ```
 
 The strict audit follows the actual staged engine dependency closure and
 compares every staged file with its current repository source.
+
+The Pages workflow runs the web tests, downloads release assets through the
+GitHub API, verifies their size and SHA-256 metadata, and publishes only a
+generated `_site` artifact. Release binaries are never committed to Git.
 
 ## Display and storage
 
