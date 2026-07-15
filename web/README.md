@@ -31,5 +31,10 @@ npm test
 and `GITHUB_TOKEN`. Its generated `_site` directory and mirrored release
 binaries are deployment artifacts, not source files.
 
+Pushes that touch `web/` run the test job only. Publishing, editing, or deleting
+a release rebuilds and deploys Pages; `workflow_dispatch` provides an explicit
+manual refresh. This avoids two different Pages artifacts competing for the
+same source commit.
+
 Use desktop Chrome or Edge over HTTPS. They are the tested browsers for this
 installer; support in other browsers is outside the release contract.

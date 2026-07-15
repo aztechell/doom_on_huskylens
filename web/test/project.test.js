@@ -51,6 +51,7 @@ test("bundled ISP stub and both MIT notices are preserved", async () => {
 test("Pages workflow deploys only the generated site artifact", async () => {
   const workflow = await readFile(new URL("../.github/workflows/pages.yml", root), "utf8");
   assert.match(workflow, /release:\s*\n\s+types: \[published, edited, deleted\]/);
+  assert.match(workflow, /if: github\.event_name != 'push'/);
   assert.match(workflow, /build-release-site\.mjs --output _site/);
   assert.match(workflow, /path: _site/);
   assert.doesNotMatch(workflow, /path: \.\s*$/m);

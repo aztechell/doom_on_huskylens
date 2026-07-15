@@ -33,6 +33,9 @@ jobs:
         run: npm --prefix web test
 
   deploy:
+    # Pages keys deployments by source SHA. A push deployment would prevent the
+    # later release event for the same commit from replacing its catalog.
+    if: github.event_name != 'push'
     needs: test
     runs-on: ubuntu-latest
     environment:
