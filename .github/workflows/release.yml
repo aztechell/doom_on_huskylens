@@ -1,0 +1,116 @@
+name: Build and publish firmware release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "VERSION"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firmware-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Read release manifest
+        id: release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (Get-Content VERSION -Raw).Trim()
+          $tag = "v$version"
+          $manifestPath = ".github/releases/$tag.json"
+          if (-not (Test-Path $manifestPath)) {
+            throw "Release manifest not found: $manifestPath"
+          }
+
+          $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+          if ($manifest.version -ne $version) {
+            throw "Manifest version '$($manifest.version)' does not match VERSION '$version'"
+          }
+          if ($manifest.tag -ne $tag) {
+            throw "Manifest tag '$($manifest.tag)' does not match '$tag'"
+          }
+
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "manifest=$manifestPath" >> $env:GITHUB_OUTPUT
+
+      - name: Build firmware
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python tools/bootstrap_deps.py
+          . .\env.ps1
+          python tools/check_env.py
+          python tools/build_firmware.py doom
+
+      - name: Verify and publish release
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $manifest = Get-Content "${{ steps.release.outputs.manifest }}" -Raw | ConvertFrom-Json
+          $tag = "${{ steps.release.outputs.tag }}"
+          $firmware = "dist/doom_huskylens.bin"
+          $metadata = "$firmware.json"
+          $checksum = "$firmware.sha256"
+
+          foreach ($file in @($firmware, $metadata, $checksum)) {
+            if (-not (Test-Path $file)) {
+              throw "Missing release asset: $file"
+            }
+          }
+
+          $actualSize = (Get-Item $firmware).Length
+          $actualSha256 = (Get-FileHash $firmware -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualSize -ne [int64]$manifest.expected_size) {
+            throw "Firmware size $actualSize does not match expected $($manifest.expected_size)"
+          }
+          if ($actualSha256 -ne $manifest.expected_sha256.ToLowerInvariant()) {
+            throw "Firmware SHA-256 $actualSha256 does not match expected $($manifest.expected_sha256)"
+          }
+
+          $generatedMetadata = Get-Content $metadata -Raw | ConvertFrom-Json
+          if ($generatedMetadata.version -ne $manifest.version) {
+            throw "Generated metadata version '$($generatedMetadata.version)' is incorrect"
+          }
+          if ([int64]$generatedMetadata.size -ne $actualSize) {
+            throw "Generated metadata size is incorrect"
+          }
+          if ($generatedMetadata.sha256.ToLowerInvariant() -ne $actualSha256) {
+            throw "Generated metadata SHA-256 is incorrect"
+          }
+
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw "Release $tag already exists"
+          }
+
+          $manifest.body | Set-Content release-notes.md -Encoding utf8
+          gh release create $tag `
+            $firmware `
+            $metadata `
+            $checksum `
+            --repo $env:GITHUB_REPOSITORY `
+            --target $env:GITHUB_SHA `
+            --title $manifest.title `
+            --notes-file release-notes.md
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "gh release create failed"
+          }
