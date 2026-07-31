@@ -26,6 +26,7 @@
 #define MENU_PANEL_H 106U
 #define MENU_ROW_Y 135U
 #define MENU_ROW_STEP 24U
+#define MENU_VISIBLE_ROWS 3U
 #define COLOR_DOOM_ORANGE 0xFD20U
 #define COLOR_DOOM_RED 0xB800U
 #define WAD_MENU_IDLE_SLEEP_US (60ULL * 1000000ULL)
@@ -49,29 +50,48 @@ static void show_loading_screen(void)
     }
 }
 
-static void draw_wad_menu_row(size_t index, uint8_t selected)
+static void draw_wad_menu_row(size_t wad_index,
+                              size_t visible_row,
+                              uint8_t selected)
 {
     char label[32];
-    uint16_t y = (uint16_t)(MENU_ROW_Y + index * MENU_ROW_STEP);
+    uint16_t y = (uint16_t)(MENU_ROW_Y + visible_row * MENU_ROW_STEP);
 
     lcd_fill_rect(18, y - 3U, LCD_W - 36U, 22, COLOR_BLACK);
     if(selected)
         lcd_draw_rect(18, y - 3U, LCD_W - 36U, 22, 1, COLOR_DOOM_RED);
+
     snprintf(label, sizeof(label), selected ? ">  %s  <" : "%s",
-             doom_storage_wad_name(index));
-    lcd_draw_text_centered(y, label, selected ? COLOR_DOOM_ORANGE : COLOR_WHITE,
+             doom_storage_wad_name(wad_index));
+    lcd_draw_text_centered(y, label,
+                           selected ? COLOR_DOOM_ORANGE : COLOR_WHITE,
                            COLOR_BLACK);
 }
 
-static void draw_wad_menu(size_t selected)
+static void draw_wad_menu_panel(size_t selected, size_t first_visible)
 {
-    show_loading_screen();
-    lcd_fill_rect(MENU_PANEL_X, MENU_PANEL_Y, MENU_PANEL_W, MENU_PANEL_H, COLOR_BLACK);
+    size_t count = doom_storage_wad_count();
+
+    lcd_fill_rect(MENU_PANEL_X, MENU_PANEL_Y, MENU_PANEL_W, MENU_PANEL_H,
+                  COLOR_BLACK);
     lcd_draw_rect(MENU_PANEL_X, MENU_PANEL_Y, MENU_PANEL_W, MENU_PANEL_H, 2,
                   COLOR_DOOM_RED);
     lcd_draw_text_centered(111, "SELECT GAME", COLOR_DOOM_ORANGE, COLOR_BLACK);
-    for(size_t i = 0; i < doom_storage_wad_count(); i++)
-        draw_wad_menu_row(i, i == selected);
+
+    for(size_t row = 0; row < MENU_VISIBLE_ROWS; row++)
+    {
+        size_t wad_index = first_visible + row;
+        if(wad_index >= count)
+            break;
+
+        draw_wad_menu_row(wad_index, row, wad_index == selected);
+    }
+}
+
+static void draw_wad_menu(size_t selected, size_t first_visible)
+{
+    show_loading_screen();
+    draw_wad_menu_panel(selected, first_visible);
 }
 
 static void wad_menu_enter_sleep(void)
@@ -81,9 +101,9 @@ static void wad_menu_enter_sleep(void)
     printf("[WAD] sleep after 60s idle\r\n");
 }
 
-static void wad_menu_wake(size_t selected)
+static void wad_menu_wake(size_t selected, size_t first_visible)
 {
-    draw_wad_menu(selected);
+    draw_wad_menu(selected, first_visible);
     lights_screen_backlight_set(100);
     printf("[WAD] wake\r\n");
 }
@@ -91,6 +111,7 @@ static void wad_menu_wake(size_t selected)
 static size_t select_wad_menu(void)
 {
     size_t selected = 0;
+    size_t first_visible = 0;
     size_t count = doom_storage_wad_count();
     uint64_t last_activity_us;
     uint8_t sleeping = 0;
@@ -101,13 +122,16 @@ static size_t select_wad_menu(void)
         buttons_poll();
         hal_sleep_ms(10);
     }
-    draw_wad_menu(selected);
+
+    draw_wad_menu(selected, first_visible);
     last_activity_us = hal_time_us();
+
     while(1)
     {
         uint64_t now;
         uint32_t state;
         uint32_t pressed;
+        uint8_t selection_changed = 0;
 
         buttons_poll();
         now = hal_time_us();
@@ -116,13 +140,14 @@ static size_t select_wad_menu(void)
 
         if(state)
             last_activity_us = now;
+
         if(sleeping)
         {
             if(pressed)
             {
                 sleeping = 0;
                 last_activity_us = now;
-                wad_menu_wake(selected);
+                wad_menu_wake(selected, first_visible);
             }
             hal_sleep_ms(10);
             continue;
@@ -130,26 +155,39 @@ static size_t select_wad_menu(void)
 
         if(pressed & BUTTON_LEFT)
         {
-            size_t previous = selected;
             selected = selected == 0 ? count - 1U : selected - 1U;
-            draw_wad_menu_row(previous, 0);
-            draw_wad_menu_row(selected, 1);
+            selection_changed = 1;
         }
         else if(pressed & BUTTON_RIGHT)
         {
-            size_t previous = selected;
             selected = (selected + 1U) % count;
-            draw_wad_menu_row(previous, 0);
-            draw_wad_menu_row(selected, 1);
+            selection_changed = 1;
         }
         else if(pressed & BUTTON_OK)
+        {
             return selected;
+        }
+
+        if(selection_changed)
+        {
+            if(selected < first_visible)
+            {
+                first_visible = selected;
+            }
+            else if(selected >= first_visible + MENU_VISIBLE_ROWS)
+            {
+                first_visible = selected - MENU_VISIBLE_ROWS + 1U;
+            }
+
+            draw_wad_menu_panel(selected, first_visible);
+        }
 
         if(!state && now - last_activity_us >= WAD_MENU_IDLE_SLEEP_US)
         {
             sleeping = 1;
             wad_menu_enter_sleep();
         }
+
         hal_sleep_ms(10);
     }
 }

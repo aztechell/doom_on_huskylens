@@ -24,19 +24,23 @@
 #define FAT_ATTR_LFN 0x0FU
 #define FAT_EOC 0x0FFFFFF8UL
 
-#define WAD_CANDIDATE_COUNT 3U
-
 typedef struct
 {
     const char *name;
     const char *engine_path;
 } wad_candidate_t;
 
-static const wad_candidate_t g_candidates[WAD_CANDIDATE_COUNT] = {
-    {"DOOM.WAD", "/DOOM/DOOM.WAD"},
+static const wad_candidate_t g_candidates[] = {
+    {"DOOM.WAD",      "/DOOM/DOOM.WAD"},
+    {"DOOM2.WAD",     "/DOOM/DOOM2.WAD"},
+    {"TNT.WAD",       "/DOOM/TNT.WAD"},
+    {"PLUTONIA.WAD",  "/DOOM/PLUTONIA.WAD"},
     {"FREEDOOM1.WAD", "/DOOM/FREEDOOM1.WAD"},
     {"FREEDOOM2.WAD", "/DOOM/FREEDOOM2.WAD"},
 };
+
+#define WAD_CANDIDATE_COUNT \
+    (sizeof(g_candidates) / sizeof(g_candidates[0]))
 
 static fat_file_entry_t g_found_entries[WAD_CANDIDATE_COUNT];
 static uint8_t g_found_candidates[WAD_CANDIDATE_COUNT];
