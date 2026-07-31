@@ -30,9 +30,26 @@ to play.
 - a [DFRobot Gravity: HuskyLens K210 AI Camera (SKU `SEN0305`)](https://www.dfrobot.com/product-1922.html) — the original K210 model, not HuskyLens 2;
 - a FAT32-formatted microSD card;
 - a USB cable and a desktop version of Chrome or Edge;
-- a legally obtained `DOOM.WAD`, or the free Freedoom IWADs.
+- a legally obtained classic `DOOM.WAD`, `DOOM2.WAD`, `TNT.WAD`, or
+  `PLUTONIA.WAD`, or the free Freedoom IWADs.
 
 The original commercial DOOM data is not included.
+
+## Supported games
+
+| WAD file | Game |
+| --- | --- |
+| `DOOM.WAD` | The Ultimate DOOM |
+| `DOOM2.WAD` | DOOM II: Hell on Earth |
+| `TNT.WAD` | Final DOOM: TNT — Evilution |
+| `PLUTONIA.WAD` | Final DOOM: The Plutonia Experiment |
+| `FREEDOOM1.WAD` | Freedoom: Phase 1 |
+| `FREEDOOM2.WAD` | Freedoom: Phase 2 |
+
+> [!IMPORTANT]
+> Use classic IWAD files from the older game installations. WAD files from the
+> newer **DOOM + DOOM II** re-release may contain replacement graphics that are
+> not compatible with this port and can stop with a `Bad V_DrawPatch` error.
 
 ## Install in three steps
 
@@ -43,12 +60,30 @@ these files into it:
 
 ```text
 /DOOM/DOOM.WAD
+/DOOM/DOOM2.WAD
+/DOOM/TNT.WAD
+/DOOM/PLUTONIA.WAD
 /DOOM/FREEDOOM1.WAD
 /DOOM/FREEDOOM2.WAD
 ```
 
-Names are case-insensitive. You can install all three and choose one whenever
-the device starts.
+Names are case-insensitive. You can install any combination of the supported
+WAD files and choose one whenever the device starts.
+
+#### Finding classic Steam WAD files on Windows
+
+With the default 64-bit Steam installation, the classic Ultimate DOOM data is
+commonly stored here:
+
+```text
+C:\Program Files (x86)\Steam\steamapps\common\Ultimate Doom\base
+```
+
+Copy `DOOM.WAD` from that folder. Classic installations of DOOM II and Final
+DOOM use the same `base` folder layout; copy `DOOM2.WAD`, `TNT.WAD`, and
+`PLUTONIA.WAD` from their corresponding classic Steam game directories.
+Do not use the replacement WAD files from the newer combined re-release if they
+produce `Bad V_DrawPatch`.
 
 Don't own DOOM? [Download Freedoom 0.13.0 (Phase 1 + Phase 2)](https://github.com/freedoom/freedoom/releases/download/v0.13.0/freedoom-0.13.0.zip),
 extract `freedoom1.wad` and/or `freedoom2.wad`, and copy them into `/DOOM/`.
@@ -112,6 +147,9 @@ Insert the prepared microSD card and restart the HuskyLens. Choose a game with
 
 - **No game is found:** check that the card is FAT32 and the file is inside
   `/DOOM/` with one of the supported names above.
+- **`Bad V_DrawPatch`:** replace the WAD with a classic version from an older
+  Steam game directory; do not use the modified WAD from the newer combined
+  DOOM + DOOM II re-release.
 - **The game picker is black:** it has gone to sleep; press any button.
 - **The web flasher cannot select a port:** use desktop Chrome or Edge, then
   reconnect the USB cable and close other serial applications.
