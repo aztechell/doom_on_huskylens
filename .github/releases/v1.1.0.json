@@ -1,0 +1,8 @@
+{
+  "version": "1.1.0",
+  "tag": "v1.1.0",
+  "title": "DOOM on HuskyLens v1.1.0",
+  "expected_size": 1470968,
+  "expected_sha256": "505e3f433b3110de8d575f0f1db419f919248eb88dccb92a1b5c292d6cad4852",
+  "body": "## What's new\n\n- Added support for `DOOM2.WAD`.\n- Added support for Final DOOM: `TNT.WAD` and `PLUTONIA.WAD`.\n- Added scrolling to the WAD picker while keeping three visible rows.\n- Updated installation documentation with classic Steam WAD locations.\n- Documented that WAD files from the newer DOOM + DOOM II re-release may fail with `Bad V_DrawPatch`; use classic IWAD files instead.\n\n## Supported IWADs\n\n- `DOOM.WAD`\n- `DOOM2.WAD`\n- `TNT.WAD`\n- `PLUTONIA.WAD`\n- `FREEDOOM1.WAD`\n- `FREEDOOM2.WAD`\n\nThe firmware remains intentionally soundless. Commercial WAD files are not included."
+}
