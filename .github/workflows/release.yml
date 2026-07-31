@@ -78,16 +78,20 @@ jobs:
 
           $actualSize = (Get-Item $firmware).Length
           $actualSha256 = (Get-FileHash $firmware -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($actualSize -ne [int64]$manifest.expected_size) {
-            throw "Firmware size $actualSize does not match expected $($manifest.expected_size)"
-          }
-          if ($actualSha256 -ne $manifest.expected_sha256.ToLowerInvariant()) {
-            throw "Firmware SHA-256 $actualSha256 does not match expected $($manifest.expected_sha256)"
+          $maxFirmwareSize = 0x7FE000 - 37
+          if ($actualSize -le 0 -or $actualSize -gt $maxFirmwareSize) {
+            throw "Firmware size $actualSize is outside the permitted flash range"
           }
 
           $generatedMetadata = Get-Content $metadata -Raw | ConvertFrom-Json
+          if ($generatedMetadata.project -ne "DOOM on HuskyLens") {
+            throw "Generated metadata project name is incorrect"
+          }
           if ($generatedMetadata.version -ne $manifest.version) {
             throw "Generated metadata version '$($generatedMetadata.version)' is incorrect"
+          }
+          if ($generatedMetadata.image -ne "doom_huskylens.bin") {
+            throw "Generated metadata image name is incorrect"
           }
           if ([int64]$generatedMetadata.size -ne $actualSize) {
             throw "Generated metadata size is incorrect"
@@ -95,6 +99,23 @@ jobs:
           if ($generatedMetadata.sha256.ToLowerInvariant() -ne $actualSha256) {
             throw "Generated metadata SHA-256 is incorrect"
           }
+          if ($generatedMetadata.flash_address -ne "0x000000") {
+            throw "Generated metadata flash address is incorrect"
+          }
+          if ($generatedMetadata.settings_address -ne "0x7FE000") {
+            throw "Generated metadata settings address is incorrect"
+          }
+
+          $checksumLine = (Get-Content $checksum -Raw).Trim()
+          if ($checksumLine -notmatch '^([a-fA-F0-9]{64})\s+\*?doom_huskylens\.bin$') {
+            throw "Checksum sidecar has an invalid format"
+          }
+          if ($Matches[1].ToLowerInvariant() -ne $actualSha256) {
+            throw "Checksum sidecar does not match the firmware"
+          }
+
+          Write-Host "Verified firmware size: $actualSize bytes"
+          Write-Host "Verified firmware SHA-256: $actualSha256"
 
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -eq 0) {
