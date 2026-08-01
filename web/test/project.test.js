@@ -49,6 +49,15 @@ test("bundled HuskyLens ISP stub and licenses are preserved", async () => {
   assert.match(stubLicense, /Version 2\.0, January 2004/);
 });
 
+test("published flasher cannot reuse an obsolete ISP stub from browser cache", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const app = await readFile(new URL("src/app.js", root), "utf8");
+
+  assert.match(html, /src\/app\.js\?v=[a-f0-9]+/);
+  assert.match(app, /isp_prog_huskylens\.bin\?v=\$\{EXPECTED_STUB_SHA256\}/);
+  assert.match(app, /cache:\s*"no-store"/);
+});
+
 test("Pages workflow deploys only the generated site artifact", async () => {
   const workflow = await readFile(new URL("../.github/workflows/pages.yml", root), "utf8");
   assert.match(workflow, /release:\s*\n\s+types: \[published, edited, deleted\]/);

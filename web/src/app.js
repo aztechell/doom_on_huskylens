@@ -483,7 +483,10 @@ async function selectRelease(tag) {
 }
 
 async function loadIspStub() {
-  const response = await fetch("./isp_stub/isp_prog_huskylens.bin", { cache: "force-cache" });
+  const response = await fetch(
+    `./isp_stub/isp_prog_huskylens.bin?v=${EXPECTED_STUB_SHA256}`,
+    { cache: "no-store" },
+  );
   if (!response.ok) throw new Error(t("stub.unavailable", { status: response.status }));
   const stub = new Uint8Array(await response.arrayBuffer());
   const digest = bytesToHex(await sha256(stub));
