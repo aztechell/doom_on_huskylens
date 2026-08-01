@@ -39,10 +39,10 @@ test("bundled HuskyLens ISP stub and licenses are preserved", async () => {
   const stub = await readFile(new URL("isp_stub/isp_prog_huskylens.bin", root));
   const webLicense = await readFile(new URL("LICENSE", root), "utf8");
   const stubLicense = await readFile(new URL("isp_stub/LICENSE", root), "utf8");
-  assert.equal(stub.length, 17_600);
+  assert.equal(stub.length, 17_664);
   assert.equal(
     createHash("sha256").update(stub).digest("hex"),
-    "d8874f21343118732103edc1afb1fbed5d22325b7e8655920f307e17329f7d0c",
+    "30dd09e36d3b3e4fd912ae0f65f600960598531cd4e13826f2e3cfd3e4b95bb3",
   );
   assert.match(webLicense, /Copyright \(c\) 2026 HLWF contributors/);
   assert.match(stubLicense, /Apache License/);
@@ -53,7 +53,7 @@ test("published flasher cannot reuse an obsolete ISP stub from browser cache", a
   const html = await readFile(new URL("index.html", root), "utf8");
   const app = await readFile(new URL("src/app.js", root), "utf8");
 
-  assert.match(html, /src\/app\.js\?v=[a-z0-9]+/);
+  assert.match(html, /src\/app\.js\?v=[a-f0-9]+/);
   assert.match(app, /isp_prog_huskylens\.bin\?v=\$\{EXPECTED_STUB_SHA256\}/);
   assert.match(app, /cache:\s*"no-store"/);
 });

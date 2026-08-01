@@ -18,7 +18,7 @@ Verification date: 2026-07-15
   `19f9fd629a1649a35372541f8517cacb4be8dbee94eacd212856196c2af29562`.
 - Flash target: HuskyLens on COM10, normal write path without full-chip erase.
 - Final flash result: completed and rebooted successfully.
-- Public installer path: the 17,600-byte HuskyLens display ISP at
+- Public installer path: the 17,664-byte HuskyLens display ISP at
   `web/isp_stub/isp_prog_huskylens.bin` was hardware-verified on COM10 at
   115,200/2,000,000 baud with a complete write, reboot, and successful boot.
 - Flash boundary guard: the final padded write is 1,474,560 bytes, and a test

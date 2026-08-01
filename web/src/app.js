@@ -5,9 +5,9 @@ import {
   setProtocolLanguage,
   sha256,
   validateFirmwareSize,
-} from "./k210.js?v=normalboot1";
+} from "./k210.js";
 
-const EXPECTED_STUB_SHA256 = "d8874f21343118732103edc1afb1fbed5d22325b7e8655920f307e17329f7d0c";
+const EXPECTED_STUB_SHA256 = "30dd09e36d3b3e4fd912ae0f65f600960598531cd4e13826f2e3cfd3e4b95bb3";
 const CATALOG_SCHEMA_VERSION = 1;
 
 const translations = {

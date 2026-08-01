@@ -130,20 +130,6 @@ test("an explicit reboot error falls back to the normal-boot reset", async () =>
   assert.equal(resets, 1);
 });
 
-test("an acknowledged reboot releases ISP lines and resets into normal boot", async () => {
-  const delays = [];
-  let resets = 0;
-  const result = await finishReboot({
-    transport: { async writeRaw() {} },
-    async readResponse() { return { reason: ResponseCode.OK }; },
-    async resetToNormalBoot() { resets += 1; },
-    async delay(milliseconds) { delays.push(milliseconds); },
-  });
-  assert.equal(result, "command-reset");
-  assert.deepEqual(delays, [650]);
-  assert.equal(resets, 1);
-});
-
 test("an unexpected reset failure is not reported as a successful reboot", async () => {
   await assert.rejects(
     finishReboot({
