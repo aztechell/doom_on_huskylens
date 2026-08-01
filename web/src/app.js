@@ -7,7 +7,7 @@ import {
   validateFirmwareSize,
 } from "./k210.js";
 
-const EXPECTED_STUB_SHA256 = "757776d0055048262ef92bd04a9f8cbad13647ec4f5c1f59494489a88d571129";
+const EXPECTED_STUB_SHA256 = "d8874f21343118732103edc1afb1fbed5d22325b7e8655920f307e17329f7d0c";
 const CATALOG_SCHEMA_VERSION = 1;
 
 const translations = {
@@ -483,7 +483,7 @@ async function selectRelease(tag) {
 }
 
 async function loadIspStub() {
-  const response = await fetch("./third_party/kflash.py/isp_prog.bin", { cache: "force-cache" });
+  const response = await fetch("./isp_stub/isp_prog_huskylens.bin", { cache: "force-cache" });
   if (!response.ok) throw new Error(t("stub.unavailable", { status: response.status }));
   const stub = new Uint8Array(await response.arrayBuffer());
   const digest = bytesToHex(await sha256(stub));

@@ -22,6 +22,7 @@ SETTINGS_FLASH_OFFSET = 0x007FE000
 STUB_ADDRESS = 0x80000000
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT.parent
+BUNDLED_HUSKYLENS_STUB = ROOT / "web" / "isp_stub" / "isp_prog_huskylens.bin"
 LEGACY_DEPS = WORKSPACE / "hackylens-legacy" / "_deps"
 DEFAULT_STUB = ROOT / "_deps" / "isp_prog.bin"
 DEFAULT_HUSKYLENS_STUB = ROOT / "_deps" / "isp_prog_huskylens.bin"
@@ -787,7 +788,8 @@ def add_reset_args(parser: argparse.ArgumentParser) -> None:
 
 
 def add_flash_args(parser: argparse.ArgumentParser) -> None:
-    for candidate in (DEFAULT_HUSKYLENS_STUB, DEFAULT_STUB, LEGACY_HUSKYLENS_STUB, LEGACY_STUB):
+    for candidate in (BUNDLED_HUSKYLENS_STUB, DEFAULT_HUSKYLENS_STUB,
+                      DEFAULT_STUB, LEGACY_HUSKYLENS_STUB, LEGACY_STUB):
         if candidate.is_file():
             default_stub = candidate
             break

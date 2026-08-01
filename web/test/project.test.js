@@ -35,17 +35,18 @@ test("project artwork is wired without stretching the 4:3 hero", async () => {
   assert.match(css, /\.hero-art img \{[^}]*aspect-ratio: 4 \/ 3[^}]*object-fit: contain/s);
 });
 
-test("bundled ISP stub and both MIT notices are preserved", async () => {
-  const stub = await readFile(new URL("third_party/kflash.py/isp_prog.bin", root));
+test("bundled HuskyLens ISP stub and licenses are preserved", async () => {
+  const stub = await readFile(new URL("isp_stub/isp_prog_huskylens.bin", root));
   const webLicense = await readFile(new URL("LICENSE", root), "utf8");
-  const stubLicense = await readFile(new URL("third_party/kflash.py/LICENSE", root), "utf8");
-  assert.equal(stub.length, 16_512);
+  const stubLicense = await readFile(new URL("isp_stub/LICENSE", root), "utf8");
+  assert.equal(stub.length, 17_600);
   assert.equal(
     createHash("sha256").update(stub).digest("hex"),
-    "757776d0055048262ef92bd04a9f8cbad13647ec4f5c1f59494489a88d571129",
+    "d8874f21343118732103edc1afb1fbed5d22325b7e8655920f307e17329f7d0c",
   );
   assert.match(webLicense, /Copyright \(c\) 2026 HLWF contributors/);
-  assert.match(stubLicense, /Copyright \(c\) 2019 Vowstar/);
+  assert.match(stubLicense, /Apache License/);
+  assert.match(stubLicense, /Version 2\.0, January 2004/);
 });
 
 test("Pages workflow deploys only the generated site artifact", async () => {

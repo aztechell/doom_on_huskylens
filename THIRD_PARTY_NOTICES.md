@@ -61,15 +61,13 @@ legal advice.
 - Copyright: 2019 Vowstar
 - License: MIT
 
-The command-line flashing workflow uses kflash.py as its protocol reference.
-Its downloaded ISP stub remains an ignored local dependency. The web flasher
-bundles the upstream MIT-licensed 16,512-byte ISP stub at
-`web/third_party/kflash.py/isp_prog.bin`; its SHA-256 is
-`757776d0055048262ef92bd04a9f8cbad13647ec4f5c1f59494489a88d571129`,
-and the original license and provenance notice are stored beside it.
-
-The separate local `isp_prog_huskylens.bin` is not published because its
-provenance and redistribution terms have not been established.
+The web and command-line flashers bundle the HuskyLens display ISP at
+`web/isp_stub/isp_prog_huskylens.bin`. It is 17,600 bytes and its SHA-256 is
+`d8874f21343118732103edc1afb1fbed5d22325b7e8655920f307e17329f7d0c`.
+The stub is derived from Apache-2.0 `loboris/ktool` revision
+`0345aa90d9b3830641373fb4e3ce4edf45d0a46f` and Kendryte SDK revision
+`02576ba67e8797444f3ee3f34c625b5ed048e707`. Its license and detailed
+provenance notice are stored beside the binary.
 
 ## HLWF web flasher
 
