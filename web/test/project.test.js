@@ -53,7 +53,7 @@ test("published flasher cannot reuse an obsolete ISP stub from browser cache", a
   const html = await readFile(new URL("index.html", root), "utf8");
   const app = await readFile(new URL("src/app.js", root), "utf8");
 
-  assert.match(html, /src\/app\.js\?v=[a-f0-9]+/);
+  assert.match(html, /src\/app\.js\?v=[a-z0-9]+/);
   assert.match(app, /isp_prog_huskylens\.bin\?v=\$\{EXPECTED_STUB_SHA256\}/);
   assert.match(app, /cache:\s*"no-store"/);
 });

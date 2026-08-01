@@ -498,24 +498,30 @@ export async function finishReboot({
   resetToNormalBoot,
   signal,
   onLog = () => {},
+  delay = sleep,
 }) {
   assertNotAborted(signal);
   await transport.writeRaw(fixedCommand(Operation.FLASH_REBOOT));
+  let commandAccepted = false;
   try {
     const response = await readResponse();
     if (response.reason !== ResponseCode.OK && response.reason !== ResponseCode.BUSY) {
       throw new ProtocolError(protocolText("rebootCode", { reason: response.reason.toString(16) }));
     }
-    return "command";
+    commandAccepted = true;
   } catch (error) {
     if (error.name === "AbortError") throw error;
     onLog(protocolText("rebootFallback", { error: error.message }), "warning");
   }
 
   try {
+    // D5 leaves DONE visible while the stub schedules its own reset.  The USB
+    // UART control lines are still in ISP mode, so always follow it with the
+    // uploader's normal-boot reset sequence instead of returning to BootROM.
+    if (commandAccepted) await delay(650);
     await resetToNormalBoot();
-    onLog(protocolText("rebootReset"), "warning");
-    return "reset";
+    onLog(protocolText("rebootReset"), commandAccepted ? "info" : "warning");
+    return commandAccepted ? "command-reset" : "reset";
   } catch (error) {
     if (error.name === "AbortError") throw error;
     if (isExpectedRebootDisconnect(error)) {
@@ -733,6 +739,7 @@ export class K210Flasher {
       readResponse: () => this.#readResponse(Operation.FLASH_REBOOT, 10000, signal),
       resetToNormalBoot: () => this.#reset([[false, false], [true, false], [false, false]]),
       signal,
+      delay: this.delay,
       onLog: (message, level) => this.log(message, level),
     });
   }
