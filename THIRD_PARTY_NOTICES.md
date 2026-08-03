@@ -62,8 +62,8 @@ legal advice.
 - License: MIT
 
 The web and command-line flashers bundle the HuskyLens display ISP at
-`web/isp_stub/isp_prog_huskylens.bin`. It is 17,600 bytes and its SHA-256 is
-`db3ba7debd7a9a0246b65853d774fc6a568507e148772e2cdffa0d3c55ca5623`.
+`web/isp_stub/isp_prog_huskylens.bin`. It is 17,856 bytes and its SHA-256 is
+`da6305613ff9179afd439be1227ec877d583cde351afed604c7e053052f57cd7`.
 The stub is derived from Apache-2.0 `loboris/ktool` revision
 `0345aa90d9b3830641373fb4e3ce4edf45d0a46f` and Kendryte SDK revision
 `02576ba67e8797444f3ee3f34c625b5ed048e707`. Its license and detailed

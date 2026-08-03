@@ -39,10 +39,10 @@ test("bundled HuskyLens ISP stub and licenses are preserved", async () => {
   const stub = await readFile(new URL("isp_stub/isp_prog_huskylens.bin", root));
   const webLicense = await readFile(new URL("LICENSE", root), "utf8");
   const stubLicense = await readFile(new URL("isp_stub/LICENSE", root), "utf8");
-  assert.equal(stub.length, 17_600);
+  assert.equal(stub.length, 17_856);
   assert.equal(
     createHash("sha256").update(stub).digest("hex"),
-    "db3ba7debd7a9a0246b65853d774fc6a568507e148772e2cdffa0d3c55ca5623",
+    "da6305613ff9179afd439be1227ec877d583cde351afed604c7e053052f57cd7",
   );
   assert.match(webLicense, /Copyright \(c\) 2026 HLWF contributors/);
   assert.match(stubLicense, /Apache License/);
